@@ -103,7 +103,7 @@ bash "${common_scripts_folder}/wait-until-server-starts.sh" "default" "${1}"
 json='{ "hosts" : ['
 ingress=$(kubectl get ingress --output=jsonpath={.items[*].spec.rules[*].host})
 for item in $ingress; do
-         json+='{"ip" :"'$item'", "ports" :['
+         json+='{"ip" :"'$item'", "label" :"'$item'", "ports" :['
             json+='{'
             json+='"protocol" : "servlet-http",  "portNumber" :"80"},{'
             json+='"protocol" : "servlet-https",  "portNumber" :"443"'
