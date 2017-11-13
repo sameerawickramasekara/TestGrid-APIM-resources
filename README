@@ -2,6 +2,9 @@ This project contains automation scripts of APIM 2.1.0 pattern deployment in K8s
 
 Follow the instructions to run the scripts.
 
+1. Make infra.sh executable and run infra.sh.
+    chmod +x infra.sh
+    ./infra.sh
 1. Make deploy.sh executable.
     chmod +x deploy.sh
 2. Run deploy.sh with following arguments.
