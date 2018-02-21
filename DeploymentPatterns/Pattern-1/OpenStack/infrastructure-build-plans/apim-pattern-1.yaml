@@ -64,7 +64,7 @@ deploymentConfig:
           file: "deploy.sh"
           inputParameters:
             docker-username: "testgrid@wso2.com"
-            docker-password: "Pw5dnlqpn/nLsdfrh4ni"
+            docker-password: ****"
             network-drive: "192.168.89.206"
           name: "deploy"
           phase: CREATE
