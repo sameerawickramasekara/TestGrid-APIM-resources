@@ -38,7 +38,7 @@ infrastructureConfig:
             image-name: "K8S-COREOS-Optimized"
             image-flavor: "m1.large"
             network: "testgrid_private_network"
-            key-pair: "sameeraw-pubkey2"
+            key-pair: "jenkins-slave-pubkey"
         - name: destroy
           file: cluster-destroy.sh
           type: SHELL
