@@ -27,24 +27,76 @@ log(){
  return
 }
 
+dir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
+cd $dir
 
-temp=${1#*//}
-Master_IP=${temp%:*}
+
+while [ "$1" != "" ]; do
+    PARAM=`echo $1 | awk -F= '{print $1}'`
+    VALUE=`echo $1 | awk -F= '{print $2}'`
+    case $PARAM in
+        -h | --help)
+            usage
+            exit
+            ;;
+        --kubernetes-master | -km )
+            KUBERNETES_MASTER=$VALUE
+            echo $KUBERNETES_MASTER
+            ;;
+        --docker-username | -du )
+            USERNAME=$VALUE
+            echo $USERNAME
+            ;;
+        --docker-password | -dp )
+            PASSWORD=$VALUE
+            echo $PASSWORD
+            ;;    
+        --network-drive | -nfs )
+            NFS=$VALUE
+            echo $NFS
+            ;;    
+        --output-dir | -o )
+            OUTPUT=$VALUE
+            echo $OUTPUT
+            ;;             
+        *)
+            echo "ERROR: unknown parameter \"$PARAM\""
+            usage
+            exit 1
+            ;;
+    esac
+    shift
+done
+
+
+# temp=${1#*//}
+# Master_IP=${temp%:*}
 prgdir=$(dirname "$0")
 script_path=$(cd "$prgdir"; pwd)
 common_scripts_folder=$(cd "${script_path}/common/scripts/"; pwd)
+
+export KUBERNETES_MASTER="$KUBERNETES_MASTER"
+
+
+#create kubeconfig file
+kubectl config --kubeconfig=config set-cluster scratch --server=$KUBERNETES_MASTER --insecure-skip-tls-verify
+kubectl config --kubeconfig=config set-credentials experimenter --username=exp --password=exp
+kubectl config --kubeconfig=config set-context exp-scratch --cluster=scratch --namespace=default --user=experimenter
+kubectl config --kubeconfig=config use-context exp-scratch
+mv config ~/.kube/
+
 source "${common_scripts_folder}/base.sh"
 
-while getopts :h FLAG; do
-    case $FLAG in
-        h)
-            showUsageAndExitDefault
-            ;;
-        \?)
-            showUsageAndExitDefault
-            ;;
-    esac
-done
+# while getopts :h FLAG; do
+#     case $FLAG in
+#         h)
+#             showUsageAndExitDefault
+#             ;;
+#         \?)
+#             showUsageAndExitDefault
+#             ;;
+#     esac
+# done
 
 #kubectl create secret docker-registry registrykey --docker-server=$2 --docker-username=$3 --docker-password=$4 --docker-email=$5
 
@@ -55,12 +107,14 @@ nodes=$(kubectl get nodes --output=jsonpath='{ $.items[*].status.addresses[?(@.t
 delete=($Master_IP)
 nodes=( "${nodes[@]/$delete}" )
 for node in $nodes; do
-    LOGIN_MSG=$(ssh core@$node "docker login docker.wso2.com -u $5 -p $4")
+    LOGIN_MSG=$(ssh core@$node "docker login docker.wso2.com -u $USERNAME -p $PASSWORD")
 	if [[ ${LOGIN_MSG} != *"Login Succeeded"* ]]; then
 		log "Docker login Error."
 		exit 1
 	fi
-	echo "Docker login succeeded"
+	log "Docker login succeeded"
+    log "pulling image to $node"
+    ssh core@$node 'bash -s' < docker-download.sh 
     ssh core@$node "docker pull docker.wso2.com/sshd-kubernetes:1.0.0 &&
 		docker pull docker.wso2.com/rsync-kubernetes:1.0.0 &&
 		docker pull docker.wso2.com/wso2am-analytics-kubernetes:2.1.0 &&
@@ -69,19 +123,17 @@ for node in $nodes; do
 done
 
 #clone APIM kubernetes artifacts repo
-env -i git clone https://github.com/wso2/kubernetes-apim.git
-env -i git checkout tags/v2.1.0-1
+# env -i git clone https://github.com/wso2/kubernetes-apim.git
+# env -i git checkout tags/v2.1.0.2
+env -i git clone --branch v2.1.0.2 https://github.com/wso2/kubernetes-apim.git
+
+#Add the NFS server ip to the config
+sed -i "s/server: [0-9.]*/server: $NFS/g" kubernetes-apim/pattern-1/artifacts/volumes/persistent-volumes.yaml 
 
 #create a namespace
 kubectl create namespace wso2
 #create a service account
 kubectl create serviceaccount wso2svcacct -n wso2
-#create kubeconfig file
-kubectl config --kubeconfig=config set-cluster scratch --server=$1 --insecure-skip-tls-verify
-kubectl config --kubeconfig=config set-credentials experimenter --username=exp --password=exp
-kubectl config --kubeconfig=config set-context exp-scratch --cluster=scratch --namespace=default --user=experimenter
-kubectl config --kubeconfig=config use-context exp-scratch
-mv config ~/.kube/
 
 cd kubernetes-apim/pattern-1/artifacts
 #deploy artifacts
@@ -97,7 +149,7 @@ for item in $ingress; do
     sudo sed -i "/The following lines are desirable for IPv6 capable hosts/i\\$str" /etc/hosts
 done
 
-bash "${common_scripts_folder}/wait-until-server-starts.sh" "default" "${1}"
+bash "${common_scripts_folder}/wait-until-server-starts.sh" "default" "${KUBERNETES_MASTER}"
 
 #create deployment.json
 json='{ "hosts" : ['
@@ -115,6 +167,6 @@ json=${json:0:${#json}-1}
 json+="]}"
 echo $json;
 
-cat > $script_path/deployment.json << EOF1
+cat > $OUTPUT/deployment.json << EOF1
 $json
 EOF1
