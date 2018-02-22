@@ -38,7 +38,13 @@ infrastructureConfig:
             image-name: "K8S-COREOS-Optimized"
             image-flavor: "m1.large"
             network: "testgrid_private_network"
-            key-pair: "sameeraw-pubkey2"
+            key-pair: "jenkins-slave-pubkey"
+            openstacks-auth-url: "http://203.94.95.131:5000/v2.0"
+            openstack-tenant-id: "testgrid"
+            openstack-tenant-name: "testgrid"
+            openstack-username: "READ_FROM_CONFIG"
+            openstack-password: "READ_FROM_CONFIG"
+            openstack-region: "RegionOne"
         - name: destroy
           file: cluster-destroy.sh
           type: SHELL
@@ -63,8 +69,8 @@ deploymentConfig:
           description: Do an APIM deployment.
           file: "deploy.sh"
           inputParameters:
-            docker-username: "testgrid@wso2.com"
-            docker-password: "Pw5dnlqpn/nLsdfrh4ni"
+            docker-username: "READ_FROM_CONFIG"
+            docker-password: "READ_FROM_CONFIG"
             network-drive: "192.168.89.206"
           name: "deploy"
           phase: CREATE

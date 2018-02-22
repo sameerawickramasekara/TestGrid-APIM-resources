@@ -182,6 +182,6 @@ TERRA_HOME=/etc/terraform
 export PATH=$TERRA_HOME:$PATH
 
 # Trigering the Ansible Scripts to do the kubernetes cluster
-# source $script_path/cluster-create.sh
+source $script_path/cluster-create.sh
 
 log "Successfully Finished Execution..."
