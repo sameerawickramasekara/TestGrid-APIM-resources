@@ -26,6 +26,13 @@ log(){
  echo "$TIME : $1"
  return
 }
+#assume credentials are stored in the root directory with this file name
+CONFIG_FILE='config.properties' 
+
+function prop {
+    grep "${1}" config.properties|cut -d'=' -f2
+}
+
 
 dir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 cd $dir
@@ -44,13 +51,21 @@ while [ "$1" != "" ]; do
             echo $KUBERNETES_MASTER
             ;;
         --docker-username | -du )
-            USERNAME=$VALUE
+            if [ "$VALUE"=="READ_FROM_CONFIG" ]; then
+                USERNAME=$(prop 'docker.username')
+            else
+                USERNAME=$VALUE
+            fi
             echo $USERNAME
             ;;
         --docker-password | -dp )
-            PASSWORD=$VALUE
+            if [ "$VALUE"=="READ_FROM_CONFIG" ]; then
+                PASSWORD=$(prop 'docker.password')
+            else
+                PASSWORD=$VALUE
+            fi
             echo $PASSWORD
-            ;;    
+            ;;            
         --network-drive | -nfs )
             NFS=$VALUE
             echo $NFS
@@ -67,6 +82,15 @@ while [ "$1" != "" ]; do
     esac
     shift
 done
+
+#read credentials from file provided
+
+DOCKER_PASSWORD=$(prop 'docker.password')
+
+
+echo $DOCKER_PASSWORD
+echo $DOCKER_USER
+
 
 
 # temp=${1#*//}
