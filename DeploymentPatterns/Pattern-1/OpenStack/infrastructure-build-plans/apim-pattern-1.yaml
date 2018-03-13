@@ -38,7 +38,7 @@ infrastructureConfig:
             image-name: "K8S-COREOS-Optimized"
             image-flavor: "m1.large"
             network: "testgrid_private_network"
-            key-pair: "jenkins-slave-pubkey"
+            key-pair: "jenkins-slave-prod-pubkey"
             openstacks-auth-url: "http://203.94.95.131:5000/v2.0"
             openstack-tenant-id: "testgrid"
             openstack-tenant-name: "testgrid"
