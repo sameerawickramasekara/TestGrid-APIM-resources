@@ -130,7 +130,7 @@ nodes=$(kubectl get nodes --output=jsonpath='{ $.items[*].status.addresses[?(@.t
 delete=($Master_IP)
 nodes=( "${nodes[@]/$delete}" )
 for node in $nodes; do
-    LOGIN_MSG=$(ssh core@$node "docker login docker.wso2.com -u $USERNAME -p $PASSWORD")
+    LOGIN_MSG=$(ssh core@$node "docker login docker.cloud.wso2.com -u $USERNAME -p $PASSWORD")
 	if [[ ${LOGIN_MSG} != *"Login Succeeded"* ]]; then
 		log "Docker login Error."
 		exit 1
