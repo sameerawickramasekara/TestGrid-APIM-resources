@@ -70,7 +70,7 @@ while [ "$1" != "" ]; do
             NFS=$VALUE
             echo $NFS
             ;;    
-        --output-dir | -o )
+        --workspace | -o )
             OUTPUT=$VALUE
             echo $OUTPUT
             ;;             
